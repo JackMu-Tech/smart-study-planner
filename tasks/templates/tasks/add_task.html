@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Add Task | Smart Study Planner{% endblock %}
+
+{% block head %}
+<style>
+  /* Add Task page specific styles */
+  .form-card {
+    background-color: var(--card-bg);
+    box-shadow: var(--card-shadow);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    margin: 2rem auto;
+    max-width: 600px;
+  }
+
+  .form-card h2 {
+    font-family: var(--font-headline);
+    font-size: 2rem;
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--color-text-dark);
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    color: var(--color-text);
+    transition: border-color var(--transition-speed);
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    border-color: var(--color-primary);
+    outline: none;
+  }
+
+  .btn-submit {
+    margin-top: 1rem;
+    width: 100%;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 640px) {
+    .form-card {
+      padding: 1.5rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-card" role="form" aria-labelledby="add-task-label">
+  <h2 id="add-task-label">Add New Task</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="title">Task Title</label>
+      <input type="text" name="title" id="title" required placeholder="Enter task title">
+    </div>
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea name="description" id="description" rows="4" placeholder="Enter task description"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="deadline">Deadline</label>
+      <input type="date" name="deadline" id="deadline" required>
+    </div>
+    <div class="form-group">
+      <label for="priority">Priority</label>
+      <select name="priority" id="priority">
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-submit">Add Task</button>
+  </form>
+  <a href="{% url 'tasks:dashboard' %}" class="btn">Back to Dashboard</a>
+</div>
+{% endblock %}

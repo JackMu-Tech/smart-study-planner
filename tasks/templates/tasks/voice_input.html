@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}Add Task by Voice | Smart Study Planner{% endblock %}
+{% block head %}
+<style>
+  .hero {
+    max-width: 720px;
+    margin: 5rem auto 3rem auto;
+    text-align: center;
+    padding: 0 1rem;
+  }
+  .hero h1 {
+    font-family: var(--font-headline);
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 0.25rem;
+  }
+  .hero p {
+    font-size: 1.2rem;
+    color: var(--color-text);
+    margin-bottom: 2rem;
+  }
+  .mic-button {
+    background: var(--card-bg);
+    box-shadow: var(--card-shadow);
+    border-radius: var(--border-radius);
+    width: 140px;
+    height: 140px;
+    margin: 1rem auto 2rem auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  .mic-button:hover, .mic-button:focus {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    outline: none;
+    transform: scale(1.05);
+  }
+  .mic-icon {
+    width: 64px;
+    height: 64px;
+    fill: var(--color-primary);
+  }
+  .status {
+    font-size: 1rem;
+    color: var(--color-text);
+    min-height: 2rem;
+    margin-bottom: 2rem;
+  }
+  form {
+    max-width: 500px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  label {
+    font-weight: 600;
+    color: var(--color-text-dark);
+  }
+  input, textarea, select {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--border-radius);
+    transition: border-color 0.3s;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--color-primary);
+    outline: none;
+  }
+  button {
+    background-color: var(--color-primary);
+    color: white;
+    font-weight: 700;
+    font-size: 1.125rem;
+    padding: 0.75rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  button:hover, button:focus {
+    background-color: #333333;
+    outline: none;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<section class="hero" role="region" aria-labelledby="voice-input-title">
+  <h1 id="voice-input-title">Add a Task Using Your Voice</h1>
+  <p>Click the microphone and speak your task details clearly.<br />You can edit before submitting.</p>
+</section>
+<button type="button" class="mic-button" id="mic-button" aria-pressed="false" aria-label="Start voice input">
+  <svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0 -6 0v6a3 3 0 0 0 3 3z"/>
+    <path d="M19 10v1a5 5 0 0 1 -10 0v-1" fill="none" stroke="#000" stroke-width="2"/>
+    <line x1="12" y1="19" x2="12" y2="23" stroke="#000" stroke-width="2"/>
+    <line x1="8" y1="23" x2="16" y2="23" stroke="#000" stroke-width="2"/>
+  </svg>
+</button>
+<div class="status" id="status-message" aria-live="polite" aria-atomic="true">Press the microphone to start speaking.</div>
+
+<form method="post" aria-label="Add task form" id="voice-task-form" novalidate>
+  {% csrf_token %}
+  <label for="title">Task Title</label>
+  <input type="text" name="title" id="title" placeholder="Task Title" required>
+  <label for="description">Description</label>
+  <textarea name="description" id="description" rows="3" placeholder="Task Description (optional)"></textarea>
+  <label for="deadline">Deadline</label>
+  <input type="date" name="deadline" id="deadline" required>
+  <label for="priority">Priority</label>
+  <select name="priority" id="priority">
+    <option value="Low">Low</option>
+    <option value="Medium" selected>Medium</option>
+    <option value="High">High</option>
+  </select>
+  <button type="submit">Add Task</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const micButton = document.getElementById('mic-button');
+    const statusMessage = document.getElementById('status-message');
+    const form = document.getElementById('voice-task-form');
+    const titleInput = document.getElementById('title');
+    const descriptionInput = document.getElementById('description');
+
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      statusMessage.textContent = 'Sorry, your browser does not support voice recognition.';
+      micButton.disabled = true;
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+
+    let recognizing = false;
+    let finalTranscript = '';
+
+    micButton.addEventListener('click', () => {
+      if (recognizing) {
+        recognition.stop();
+        micButton.setAttribute('aria-pressed', 'false');
+        return;
+      }
+      recognition.start();
+      micButton.setAttribute('aria-pressed', 'true');
+      statusMessage.textContent = 'Listening... Please speak your task.';
+      finalTranscript = '';
+      titleInput.value = '';
+      descriptionInput.value = '';
+    });
+
+    recognition.onresult = (event) => {
+      let interimTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if(event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript.trim() + ' ';
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+      // Set final + interim value in the title input (can be raw)
+      titleInput.value = finalTranscript + interimTranscript;
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error', event.error);
+      statusMessage.textContent = 'Error occurred in recognition: ' + event.error;
+      recognizing = false;
+      micButton.setAttribute('aria-pressed', 'false');
+    };
+
+    recognition.onend = () => {
+      recognizing = false;
+      micButton.setAttribute('aria-pressed', 'false');
+      if(finalTranscript.trim()) {
+        statusMessage.textContent = 'Voice input captured. You can edit above or submit.';
+      } else {
+        statusMessage.textContent = 'No speech detected. Please try again.';
+      }
+    };
+
+    recognition.onstart = () => {
+      recognizing = true;
+    };
+
+    // Optional: Automatically submit form if you want after voice input finished
+    // form.addEventListener('submit', (e) => {
+    //   e.preventDefault();
+    //   // implement actual form submission or ajax here
+    //   alert('Form submitted with title: ' + titleInput.value);
+    // });
+
+  });
+</script>
+{% endblock %}
