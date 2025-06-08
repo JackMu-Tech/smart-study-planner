@@ -6,7 +6,7 @@ from .views import dashboard, add_task, calendar_view,\
 app_name = 'tasks'
 
 urlpatterns = [
-    path('dashboard/', dashboard, name='dashboard'),
+    path('', dashboard, name='dashboard'),
     path('add/', add_task, name='add_task'),
     path('calendar/', calendar_view, name='calendar'),
     path('calendar/events/', calendar_events_json, name='calendar_events_json'),
@@ -15,5 +15,6 @@ urlpatterns = [
     path('study_recommendations/', study_recommendations, name='study_recommendations'),
     path('voice_input/', voice_input, name='voice_input'),
     path('api/upcoming_tasks/', upcoming_tasks_api, name='upcoming_tasks_api'),
+    
 
 ]
