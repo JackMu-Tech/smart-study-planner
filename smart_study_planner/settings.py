@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure--*pc6r%n@v%6ux2ht3t&xhdyuv(#b9ql)vd)$xyax62rnb*km)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['mu-tech-smart-study-planner.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'smart-study-planner-1.onrender.com']
 
 
 # Application definition
